@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Semana - Asistente Personal</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { 50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8' },
+                        accent: { 50: '#fdf4ff', 500: '#d946ef', 600: '#c026d3' }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
+    </style>
+</head>
+<body class="h-full bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200 overflow-hidden flex flex-col">
+
+    <!-- Onboarding Modal (Personalización Inicial) -->
+    <div id="onboarding-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-primary-500 text-white p-2.5 rounded-xl"><i class="fa-solid fa-compass text-xl"></i></div>
+                    <div>
+                        <h2 class="text-xl font-bold">Configuración Inicial</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Personaliza tu asistente para adaptarlo a tu estilo de vida</p>
+                    </div>
+                </div>
+                <button onclick="skipOnboarding()" class="text-xs font-medium text-slate-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">Omitir por ahora</button>
+            </div>
+
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-6" id="onboarding-steps">
+                <!-- Step 1: Horarios y Sueño -->
+                <div class="space-y-4" data-step="1">
+                    <h3 class="text-base font-semibold text-primary-600 dark:text-primary-400 flex items-center gap-2">
+                        <i class="fa-solid fa-moon"></i> 1. Horarios de Descanso y Sueño
+                    </h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium mb-1">Hora habitual de acostarse</label>
+                            <input type="time" id="onb-sleep-time" value="23:00" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium mb-1">Hora habitual de despertar</label>
+                            <input type="time" id="onb-wake-time" value="07:00" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Compromisos Fijos -->
+                <div class="space-y-4" data-step="2">
+                    <h3 class="text-base font-semibold text-primary-600 dark:text-primary-400 flex items-center gap-2">
+                        <i class="fa-solid fa-briefcase"></i> 2. Compromisos Fijos Principales
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">¿Qué actividad ocupa gran parte de tus días (estudio, trabajo)?</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <input type="text" id="onb-fixed-title" placeholder="Ej: Universidad / Oficina" class="p-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent text-sm">
+                        <select id="onb-fixed-category" class="p-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent text-sm">
+                            <option value="estudio">Estudio</option>
+                            <option value="trabajo" selected>Trabajo</option>
+                            <option value="entrenamiento">Entrenamiento</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Step 3: Preferencias Alimentarias -->
+                <div class="space-y-4" data-step="3">
+                    <h3 class="text-base font-semibold text-primary-600 dark:text-primary-400 flex items-center gap-2">
+                        <i class="fa-solid fa-utensils"></i> 3. Preferencias y Salud Nutricional
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium mb-1">Alergias o restricciones alimentarias</label>
+                            <input type="text" id="onb-allergies" placeholder="Ej: Ninguna, lactosa, frutos secos..." class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent text-sm">
+                        </div>
+                        <div class="flex items-center space-x-3 pt-2">
+                            <input type="checkbox" id="onb-minor" class="w-4 h-4 text-primary-600 rounded border-slate-300 focus:ring-primary-500">
+                            <label for="onb-minor" class="text-xs text-slate-600 dark:text-slate-300">¿Eres menor de edad? (Priorizaremos variedad y energía sin restricciones calóricas)</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                <span class="text-xs text-slate-500" id="onb-step-indicator">Paso 1 de 3</span>
+                <div class="space-x-3">
+                    <button onclick="prevOnboardingStep()" id="onb-prev-btn" class="px-4 py-2 rounded-xl text-sm font-medium border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 hidden">Anterior</button>
+                    <button onclick="nextOnboardingStep()" id="onb-next-btn" class="px-5 py-2 rounded-xl text-sm font-medium bg-primary-600 text-white hover:bg-primary-700 shadow-sm transition-all">Siguiente</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <!-- Main App Layout -->
+    <div class="flex h-full w-full overflow-hidden">
+        
+        <!-- Sidebar Navigation (Desktop) -->
+        <aside class="hidden md:flex flex-col w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 z-20">
+            <div class="p-5 flex items-center space-x-3 border-b border-slate-200 dark:border-slate-700">
+                <div class="bg-gradient-to-tr from-primary-600 to-accent-600 text-white p-2.5 rounded-xl shadow-md">
+                    <i class="fa-solid fa-calendar-check text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">Mi Semana</h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Asistente Personal</p>
+                </div>
+            </div>
+
+            <nav class="flex-1 p-4 space-y-1.5 overflow-y-auto custom-scrollbar">
+                <button onclick="switchTab('inicio')" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-950/50" data-tab="inicio">
+                    <i class="fa-solid fa-house w-5 text-center"></i> <span>Inicio</span>
+                </button>
+                <button onclick="switchTab('semana')" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50" data-tab="semana">
+                    <i class="fa-solid fa-calendar-days w-5 text-center"></i> <span>Mi Semana</span>
+                </button>
+                <button onclick="switchTab('comidas')" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50" data-tab="comidas">
+                    <i class="fa-solid fa-utensils w-5 text-center"></i> <span>Comidas & Menú</span>
+                </button>
+                <button onclick="switchTab('habitos')" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50" data-tab="habitos">
+                    <i class="fa-solid fa-droplet w-5 text-center"></i> <span>Hábitos & Agua</span>
+                </button>
+                <button onclick="switchTab('estadisticas')" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50" data-tab="estadisticas">
+                    <i class="fa-solid fa-chart-pie w-5 text-center"></i> <span>Estadísticas & Tiempo</span>
+                </button>
+                <button onclick="switchTab('configuracion')" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50" data-tab="configuracion">
+                    <i class="fa-solid fa-gear w-5 text-center"></i> <span>Configuración</span>
+                </button>
+            </nav>
+
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700">
+                <div class="bg-slate-100 dark:bg-slate-700/50 p-3 rounded-xl flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-shield-halved text-emerald-500"></i>
+                        <span class="text-xs font-medium">Modo Local Seguro</span>
+                    </div>
+                    <button onclick="toggleDarkMode()" class="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
+                        <i class="fa-solid fa-moon dark:fa-sun text-slate-600 dark:text-amber-400"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+            
+            <!-- Mobile Header -->
+            <header class="md:hidden bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-4 flex justify-between items-center z-10">
+                <div class="flex items-center space-x-2">
+                    <div class="bg-gradient-to-tr from-primary-600 to-accent-600 text-white p-2 rounded-lg shadow">
+                        <i class="fa-solid fa-calendar-check"></i>
+                    </div>
+                    <h1 class="font-bold text-base" id="mobile-title">Inicio</h1>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="toggleDarkMode()" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-amber-400">
+                        <i class="fa-solid fa-moon dark:fa-sun"></i>
+                    </button>
+                    <button onclick="openActivityModal()" class="bg-primary-600 text-white p-2 rounded-lg shadow">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content Scroll Area -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6 lg:p-8 pb-24 md:pb-8" id="main-scroll-container">
+                
+                <!-- ================= TAB: INICIO ================= -->
+                <div id="tab-inicio" class="tab-content space-y-6 max-w-6xl mx-auto">
+                    <!-- Welcome & Quick Status Banner -->
+                    <div class="bg-gradient-to-r from-primary-600 to-accent-600 rounded-3xl p-6 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <span class="bg-white/20 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Asistente Activo</span>
+                            <h2 class="text-2xl sm:text-3xl font-bold mt-2" id="welcome-greeting">¡Hola! Que tengas una gran semana</h2>
+                            <p class="text-white/80 text-sm mt-1" id="current-date-display">Jueves, 15 de Octubre de 2026</p>
+                        </div>
+                        <div class="flex flex-wrap gap-3 w-full md:w-auto">
+                            <button onclick="openActivityModal()" class="bg-white text-primary-600 px-4 py-2.5 rounded-xl font-semibold text-sm shadow hover:bg-slate-100 transition-all flex items-center gap-2">
+                                <i class="fa-solid fa-plus"></i> Nueva Actividad
+                            </button>
+                            <button onclick="switchTab('comidas')" class="bg-white/10 backdrop-blur border border-white/20 text-white px-4 py-2.5 rounded-xl font-semibold text-sm hover:bg-white/20 transition-all flex items-center gap-2">
+                                <i class="fa-solid fa-utensils"></i> Ver Menú
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Left 2 Cols: Next Activity & Today Agenda -->
+                        <div class="md:col-span-2 space-y-6">
+                            <!-- Next Activity Card -->
+                            <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-700">
+                                <div class="flex justify-between items-center mb-3">
+                                    <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                        <i class="fa-solid fa-bolt text-amber-500"></i> Próxima Actividad
+                                    </h3>
+                                    <span class="text-xs text-primary-600 dark:text-primary-400 font-medium cursor-pointer hover:underline" onclick="switchTab('semana')">Ver calendario completo</span>
+                                </div>
+                                <div id="next-activity-card" class="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 border border-slate-200/60 dark:border-slate-600/60 flex items-center justify-between">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="w-12 h-12 rounded-xl bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 flex items-center justify-center text-xl font-bold">
+                                            <i class="fa-solid fa-book-open"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-base" id="next-act-title">Sesión de Estudio</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5"><span id="next-act-time">16:00 - 18:00</span> • <span id="next-act-category">Estudio</span></p>
+                                        </div>
+                                    </div>
+                                    <button onclick="completeNextActivity()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow transition-all">
+                                        Completar
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Today Agenda summary -->
+                            <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-700">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                        <i class="fa-solid fa-list-check text-primary-500"></i> Agenda del Día
+                                    </h3>
+                                    <span class="text-xs font-medium bg-slate-100 dark:bg-slate-700 px-2.5 py-1 rounded-full" id="today-count-badge">4 actividades</span>
+                                </div>
+                                <div id="today-activities-list" class="space-y-3">
+                                    <!-- Injected via JS -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Col: Hydration, Meals & Quick Reminders -->
+                        <div class="space-y-6">
+                            <!-- Water Quick Card -->
+                            <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-700">
+                                <div class="flex justify-between items-center mb-3">
+                                    <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                        <i class="fa-solid fa-droplet text-sky-500"></i> Hidratación Diaria
+                                    </h3>
+                                    <span class="text-xs text-slate-500" id="water-stat-text">1.5L / 2.5L</span>
+                                </div>
+                                <div class="flex items-center space-x-4 mb-4">
+                                    <div class="relative flex-1 bg-slate-100 dark:bg-slate-700 rounded-full h-4 overflow-hidden">
+                                        <div id="water-progress-bar" class="bg-sky-500 h-full transition-all duration-500" style="width: 60%"></div>
+                                    </div>
+                                    <span class="text-sm font-bold text-sky-600 dark:text-sky-400" id="water-percent">60%</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button onclick="addWater(250)" class="py-2 px-3 bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 rounded-xl font-medium text-xs hover:bg-sky-100 transition-colors border border-sky-200 dark:border-sky-800 flex items-center justify-center gap-1.5">
+                                        <i class="fa-solid fa-glass-water"></i> +250 ml
+                                    </button>
+                                    <button onclick="addWater(500)" class="py-2 px-3 bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 rounded-xl font-medium text-xs hover:bg-sky-100 transition-colors border border-sky-200 dark:border-sky-800 flex items-center justify-center gap-1.5">
+                                        <i class="fa-solid fa-bottle-water"></i> +500 ml
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Today Meals Card -->
+                            <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-700">
+                                <div class="flex justify-between items-center mb-3">
+                                    <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                        <i class="fa-solid fa-utensils text-emerald-500"></i> Comidas de Hoy
+                                    </h3>
+                                    <span class="text-xs text-primary-600 cursor-pointer hover:underline" onclick="switchTab('comidas')">Editar menú</span>
+                                </div>
+                                <div id="today-meals-preview" class="space-y-2.5 text-sm">
+                                    <!-- Injected via JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= TAB: MI SEMANA (CALENDARIO) ================= -->
+                <div id="tab-semana" class="tab-content space-y-6 max-w-6xl mx-auto hidden">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+                        <div>
+                            <h2 class="text-xl font-bold">Calendario Semanal</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Organiza tus compromisos, descansos y traslados sin superposiciones</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <div class="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-xl">
+                                <button onclick="setCalendarView('semana')" id="btn-view-semana" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-slate-600 shadow-sm transition-all">Semana</button>
+                                <button onclick="setCalendarView('dia')" id="btn-view-dia" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 transition-all">Día</button>
+                            </div>
+                            <button onclick="openActivityModal()" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow transition-all flex items-center gap-1.5">
+                                <i class="fa-solid fa-plus"></i> Agregar Actividad
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Week Grid Container -->
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-7 divide-y md:divide-y-0 md:divide-x divide-slate-200 dark:divide-slate-700" id="calendar-grid">
+                            <!-- Injected via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= TAB: COMIDAS ================= -->
+                <div id="tab-comidas" class="tab-content space-y-6 max-w-6xl mx-auto hidden">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+                        <div>
+                            <h2 class="text-xl font-bold">Organización de Comidas & Menú</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Menús equilibrados, recetas sencillas y lista de compras automática</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="generateShoppingList()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow transition-all flex items-center gap-1.5">
+                                <i class="fa-solid fa-cart-shopping"></i> Generar Lista de Compras
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Meals Tabs / Sections -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Left 2 Cols: Weekly Menu Grid -->
+                        <div class="lg:col-span-2 space-y-4">
+                            <h3 class="font-semibold text-base flex items-center gap-2">
+                                <i class="fa-solid fa-calendar-week text-primary-500"></i> Menú Semanal Planificado
+                            </h3>
+                            <div id="weekly-menu-container" class="space-y-3">
+                                <!-- Injected via JS -->
+                            </div>
+                        </div>
+
+                        <!-- Right Col: Shopping List & Nutritional Note -->
+                        <div class="space-y-6">
+                            <!-- Shopping List Card -->
+                            <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-700">
+                                <div class="flex justify-between items-center mb-3">
+                                    <h3 class="text-sm font-semibold uppercase tracking-wider flex items-center gap-2">
+                                        <i class="fa-solid fa-basket-shopping text-emerald-500"></i> Lista de Compras
+                                    </h3>
+                                    <button onclick="clearShoppingList()" class="text-xs text-slate-400 hover:text-red-500">Limpiar</button>
+                                </div>
+                                <div id="shopping-list-container" class="space-y-2 text-sm max-h-80 overflow-y-auto custom-scrollbar pr-1">
+                                    <p class="text-xs text-slate-400 italic">Haz clic en "Generar Lista de Compras" para agrupar los ingredientes del menú.</p>
+                                </div>
+                            </div>
+
+                            <!-- Nutritional Estimation Notice -->
+                            <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 rounded-2xl p-4 text-xs text-amber-800 dark:text-amber-300 space-y-2">
+                                <div class="flex items-center gap-2 font-semibold">
+                                    <i class="fa-solid fa-circle-info"></i> Estimación Nutricional (Aproximada)
+                                </div>
+                                <p>Las calorías y nutrientes son estimaciones generales para ayudarte a mantener energía y variedad. No establecemos restricciones estrictas.</p>
+                                <div class="pt-2">
+                                    <label class="flex items-center gap-2 cursor-pointer font-medium">
+                                        <input type="checkbox" id="toggle-calories-view" onchange="toggleCaloriesDisplay()" class="rounded border-amber-400 text-amber-600 focus:ring-amber-500">
+                                        Mostrar estimación de calorías en platos
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= TAB: HÁBITOS ================= -->
+                <div id="tab-habitos" class="tab-content space-y-6 max-w-6xl mx-auto hidden">
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+                        <h2 class="text-xl font-bold">Control de Hábitos & Hidratación</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Mantén tus niveles óptimos de agua y bienestar diario</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Water detailed tracker -->
+                        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700 space-y-4">
+                            <h3 class="font-bold text-base flex items-center gap-2">
+                                <i class="fa-solid fa-droplet text-sky-500"></i> Registro Detallado de Agua
+                            </h3>
+                            <div class="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl">
+                                <div>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">Total Consumido Hoy</p>
+                                    <h4 class="text-2xl font-bold text-sky-600 dark:text-sky-400" id="habit-water-total">1,500 ml</h4>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">Meta Personal</p>
+                                    <h4 class="text-lg font-semibold" id="habit-water-goal">2,500 ml</h4>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-3">
+                                <button onclick="addWater(200)" class="py-3 px-3 bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 rounded-xl font-medium text-xs hover:bg-sky-100 transition-colors border border-sky-200 dark:border-sky-800 flex flex-col items-center gap-1">
+                                    <i class="fa-solid fa-glass-water text-base"></i> Vaso (200ml)
+                                </button>
+                                <button onclick="addWater(500)" class="py-3 px-3 bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 rounded-xl font-medium text-xs hover:bg-sky-100 transition-colors border border-sky-200 dark:border-sky-800 flex flex-col items-center gap-1">
+                                    <i class="fa-solid fa-bottle-water text-base"></i> Botella (500ml)
+                                </button>
+                                <button onclick="undoWater()" class="py-3 px-3 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl font-medium text-xs hover:bg-slate-200 transition-colors border border-slate-200 dark:border-slate-600 flex flex-col items-center gap-1">
+                                    <i class="fa-solid fa-rotate-left text-base"></i> Deshacer Último
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Personal Routines / Habits -->
+                        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700 space-y-4">
+                            <h3 class="font-bold text-base flex items-center gap-2">
+                                <i class="fa-solid fa-spa text-emerald-500"></i> Rutinas de Bienestar
+                            </h3>
+                            <div class="space-y-3" id="habits-list-container">
+                                <!-- Injected via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= TAB: ESTADÍSTICAS ================= -->
+                <div id="tab-estadisticas" class="tab-content space-y-6 max-w-6xl mx-auto hidden">
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+                        <h2 class="text-xl font-bold">Estadísticas & Tiempo Dedicado</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Compara el tiempo planificado versus el realizado en estudio, trabajo, entrenamiento y descanso</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Time breakdown card -->
+                        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700 space-y-4">
+                            <h3 class="font-bold text-base flex items-center gap-2">
+                                <i class="fa-solid fa-clock text-primary-500"></i> Distribución Semanal de Tiempo
+                            </h3>
+                            <div class="space-y-3" id="time-stats-bars">
+                                <!-- Injected via JS -->
+                            </div>
+                        </div>
+
+                        <!-- Completed summary -->
+                        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700 space-y-4">
+                            <h3 class="font-bold text-base flex items-center gap-2">
+                                <i class="fa-solid fa-chart-line text-emerald-500"></i> Resumen de Productividad
+                            </h3>
+                            <div class="grid grid-cols-2 gap-4 text-center">
+                                <div class="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl">
+                                    <span class="text-3xl font-bold text-primary-600 dark:text-primary-400" id="stat-completed-count">12</span>
+                                    <p class="text-xs text-slate-500 mt-1">Actividades Completadas</p>
+                                </div>
+                                <div class="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl">
+                                    <span class="text-3xl font-bold text-emerald-600 dark:text-emerald-400" id="stat-efficiency-rate">88%</span>
+                                    <p class="text-xs text-slate-500 mt-1">Cumplimiento Plan</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= TAB: CONFIGURACIÓN ================= -->
+                <div id="tab-configuracion" class="tab-content space-y-6 max-w-4xl mx-auto hidden">
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-6">
+                        <div>
+                            <h2 class="text-xl font-bold">Configuración y Privacidad</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Gestiona tus preferencias, datos personales y notificaciones</p>
+                        </div>
+
+                        <div class="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                            <h3 class="font-semibold text-sm text-primary-600 dark:text-primary-400">Notificaciones y Recordatorios</h3>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium">Permitir Notificaciones del Navegador</p>
+                                    <p class="text-xs text-slate-500">Recibe avisos anticipados para tus actividades y comidas.</p>
+                                </div>
+                                <button onclick="requestNotificationPermission()" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-semibold shadow transition-all">Solicitar Permiso</button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                            <h3 class="font-semibold text-sm text-primary-600 dark:text-primary-400">Gestión de Datos Personales</h3>
+                            <div class="flex flex-wrap gap-3">
+                                <button onclick="exportUserData()" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-xs font-semibold transition-all flex items-center gap-2">
+                                    <i class="fa-solid fa-download"></i> Exportar Datos (JSON)
+                                </button>
+                                <button onclick="resetAllData()" class="px-4 py-2 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-100 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 border border-red-200 dark:border-red-900">
+                                    <i class="fa-solid fa-trash"></i> Eliminar Mis Datos
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Mobile Bottom Bar -->
+            <nav class="md:hidden absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex justify-around p-2 z-20">
+                <button onclick="switchTab('inicio')" class="mobile-nav-btn flex flex-col items-center py-1 px-3 text-primary-600 dark:text-primary-400" data-tab="inicio">
+                    <i class="fa-solid fa-house text-lg"></i>
+                    <span class="text-[10px] mt-0.5">Inicio</span>
+                </button>
+                <button onclick="switchTab('semana')" class="mobile-nav-btn flex flex-col items-center py-1 px-3 text-slate-400 hover:text-slate-600" data-tab="semana">
+                    <i class="fa-solid fa-calendar-days text-lg"></i>
+                    <span class="text-[10px] mt-0.5">Semana</span>
+                </button>
+                <button onclick="switchTab('comidas')" class="mobile-nav-btn flex flex-col items-center py-1 px-3 text-slate-400 hover:text-slate-600" data-tab="comidas">
+                    <i class="fa-solid fa-utensils text-lg"></i>
+                    <span class="text-[10px] mt-0.5">Comidas</span>
+                </button>
+                <button onclick="switchTab('habitos')" class="mobile-nav-btn flex flex-col items-center py-1 px-3 text-slate-400 hover:text-slate-600" data-tab="habitos">
+                    <i class="fa-solid fa-droplet text-lg"></i>
+                    <span class="text-[10px] mt-0.5">Hábitos</span>
+                </button>
+                <button onclick="switchTab('estadisticas')" class="mobile-nav-btn flex flex-col items-center py-1 px-3 text-slate-400 hover:text-slate-600" data-tab="estadisticas">
+                    <i class="fa-solid fa-chart-pie text-lg"></i>
+                    <span class="text-[10px] mt-0.5">Stats</span>
+                </button>
+            </nav>
+
+        </main>
+    </div>
+
+    <!-- Add / Edit Activity Modal -->
+    <div id="activity-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+            <div class="p-5 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                <h3 class="font-bold text-lg" id="modal-activity-title">Agregar Actividad</h3>
+                <button onclick="closeActivityModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-medium mb-1">Título de la Actividad</label>
+                    <input type="text" id="act-title" placeholder="Ej: Clase de Inglés, Gimnasio..." class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium mb-1">Día</label>
+                        <select id="act-day" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent text-sm">
+                            <option value="Lunes">Lunes</option>
+                            <option value="Martes">Martes</option>
+                            <option value="Miércoles">Miércoles</option>
+                            <option value="Jueves" selected>Jueves</option>
+                            <option value="Viernes">Viernes</option>
+                            <option value="Sábado">Sábado</option>
+                            <option value="Domingo">Domingo</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1">Categoría</label>
+                        <select id="act-category" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent text-sm">
+                            <option value="estudio">Estudio</option>
+                            <option value="trabajo">Trabajo</option>
+                            <option value="entrenamiento">Entrenamiento</option>
+                            <option value="descanso">Descanso</option>
+                            <option value="ocio">Ocio / Tiempo libre</option>
+                            <option value="traslado">Traslado</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium mb-1">Hora Inicio</label>
+                        <input type="time" id="act-start" value="10:00" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1">Hora Fin</label>
+                        <input type="time" id="act-end" value="11:30" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1">Prioridad</label>
+                    <select id="act-priority" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent text-sm">
+                        <option value="alta">Alta (Compromiso fijo)</option>
+                        <option value="media" selected>Media</option>
+                        <option value="baja">Baja</option>
+                    </select>
+                </div>
+            </div>
+            <div class="p-5 border-t border-slate-200 dark:border-slate-700 flex justify-end space-x-3 bg-slate-50 dark:bg-slate-800/50">
+                <button onclick="closeActivityModal()" class="px-4 py-2 rounded-xl text-sm font-medium border border-slate-300 dark:border-slate-600">Cancelar</button>
+                <button onclick="saveActivity()" class="px-5 py-2 rounded-xl text-sm font-medium bg-primary-600 text-white hover:bg-primary-700 shadow">Guardar Actividad</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Smart Proposal Modal (Reorganización Inteligente) -->
+    <div id="proposal-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+            <div class="p-5 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-primary-50 dark:bg-primary-950/40">
+                <div class="flex items-center gap-3">
+                    <div class="bg-primary-500 text-white p-2 rounded-xl"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                    <div>
+                        <h3 class="font-bold text-base text-primary-900 dark:text-primary-200">Propuesta de Reorganización</h3>
+                        <p class="text-xs text-primary-700 dark:text-primary-400">Detectamos solapamiento. Aquí tienes una propuesta editable:</p>
+                    </div>
+                </div>
+                <button onclick="closeProposalModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-6 space-y-4" id="proposal-content">
+                <!-- Injected via JS -->
+            </div>
+            <div class="p-5 border-t border-slate-200 dark:border-slate-700 flex justify-end space-x-3 bg-slate-50 dark:bg-slate-800/50">
+                <button onclick="closeProposalModal()" class="px-4 py-2 rounded-xl text-sm font-medium border border-slate-300">Descartar</button>
+                <button onclick="applyProposal()" class="px-5 py-2 rounded-xl text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700 shadow">Aplicar Propuesta</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application JavaScript -->
+    <script>
+        // --- State Management ---
+        let appState = {
+            onboardingCompleted: false,
+            darkMode: false,
+            calendarView: 'semana',
+            userProfile: {
+                sleepTime: '23:00',
+                wakeTime: '07:00',
+                fixedTitle: 'Trabajo / Oficina',
+                fixedCategory: 'trabajo',
+                allergies: 'Ninguna',
+                isMinor: false
+            },
+            activities: [
+                { id: '1', title: 'Trabajo Principal', day: 'Lunes', start: '09:00', end: '17:00', category: 'trabajo', priority: 'alta', completed: true },
+                { id: '2', title: 'Entrenamiento Gimnasio', day: 'Lunes', start: '18:00', end: '19:15', category: 'entrenamiento', priority: 'media', completed: true },
+                { id: '3', title: 'Estudio Programación', day: 'Martes', start: '16:00', end: '18:30', category: 'estudio', priority: 'media', completed: false },
+                { id: '4', title: 'Sesión de Estudio', day: 'Jueves', start: '16:00', end: '18:00', category: 'estudio', priority: 'alta', completed: false },
+                { id: '5', title: 'Descanso / Paseo', day: 'Viernes', start: '17:00', end: '19:00', category: 'descanso', priority: 'baja', completed: false }
+            ],
+            meals: {
+                'Lunes': { desayuno: 'Tostadas con palta y huevo', almuerzo: 'Ensalada de pollo y quinoa', merienda: 'Yogurt con frutos secos', cena: 'Salmón al horno con vegetales', consumed: { desayuno: true, almuerzo: true, merienda: false, cena: false } },
+                'Martes': { desayuno: 'Avena con banana y canela', almuerzo: 'Pasta integral con verduras', merienda: 'Fruta fresca y té', cena: 'Pechuga de pollo a la plancha', consumed: { desayuno: false, almuerzo: false, merienda: false, cena: false } },
+                'Miércoles': { desayuno: 'Panqueques de avena', almuerzo: 'Arroz con lentejas y ensalada', merienda: 'Tostadas con queso crema', cena: 'Tortilla de vegetales', consumed: { desayuno: false, almuerzo: false, merienda: false, cena: false } },
+                'Jueves': { desayuno: 'Yogurt con granola', almuerzo: 'Filet de merluza con puré', merienda: 'Frutos secos', cena: 'Sopa de verduras y pan integral', consumed: { desayuno: false, almuerzo: false, merienda: false, cena: false } },
+                'Viernes': { desayuno: 'Tostadas integrales', almuerzo: 'Wrap de atún y vegetales', merienda: 'Licuado de frutas', cena: 'Pizza casera liviana', consumed: { desayuno: false, almuerzo: false, merienda: false, cena: false } },
+                'Sábado': { desayuno: 'Huevos revueltos y tostadas', almuerzo: 'Asado con ensalada mixta', merienda: 'Café con medialunas', cena: 'Picada saludable', consumed: { desayuno: false, almuerzo: false, merienda: false, cena: false } },
+                'Domingo': { desayuno: 'Pancakes caseros', almuerzo: 'Pasta casera', merienda: 'Infusión con galletas', cena: 'Tarta de acelga y zapallito', consumed: { desayuno: false, almuerzo: false, merienda: false, cena: false } }
+            },
+            water: {
+                consumedMl: 1500,
+                goalMl: 2500,
+                history: [500, 500, 500]
+            },
+            habits: [
+                { id: 'h1', title: 'Lectura de 20 minutos', completedToday: true },
+                { id: 'h2', title: 'Estiramiento / Movilidad', completedToday: false },
+                { id: 'h3', title: 'Caminar 7,000 pasos', completedToday: true }
+            ],
+            showCalories: false
+        };
+
+        // --- Initialization ---
+        window.onload = function() {
+            loadState();
+            setupDateDisplay();
+            renderAll();
+            if (!appState.onboardingCompleted) {
+                document.getElementById('onboarding-modal').classList.remove('hidden');
+            }
+        };
+
+        function loadState() {
+            const saved = localStorage.getItem('mi_semana_state_v2');
+            if (saved) {
+                try { appState = JSON.parse(saved); } catch (e) { console.error(e); }
+            }
+            if (appState.darkMode) {
+                document.documentElement.classList.add('dark');
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('mi_semana_state_v2', JSON.stringify(appState));
+        }
+
+        function setupDateDisplay() {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const dateStr = new Date().toLocaleDateString('es-ES', options);
+            document.getElementById('current-date-display').innerText = capitalizeFirst(dateStr);
+        }
+
+        function capitalizeFirst(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        // --- Navigation ---
+        let currentTab = 'inicio';
+        function switchTab(tabId) {
+            currentTab = tabId;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if(btn.getAttribute('data-tab') === tabId) {
+                    btn.className = "nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-950/50";
+                } else {
+                    btn.className = "nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50";
+                }
+            });
+
+            document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+                if(btn.getAttribute('data-tab') === tabId) {
+                    btn.className = "mobile-nav-btn flex flex-col items-center py-1 px-3 text-primary-600 dark:text-primary-400";
+                } else {
+                    btn.className = "mobile-nav-btn flex flex-col items-center py-1 px-3 text-slate-400 hover:text-slate-600";
+                }
+            });
+
+            const titles = { inicio: 'Inicio', semana: 'Mi Semana', comidas: 'Comidas & Menú', habitos: 'Hábitos & Agua', estadisticas: 'Estadísticas', configuracion: 'Configuración' };
+            document.getElementById('mobile-title').innerText = titles[tabId] || 'Mi Semana';
+            window.scrollTo(0, 0);
+        }
+
+        function toggleDarkMode() {
+            appState.darkMode = !appState.darkMode;
+            if (appState.darkMode) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            saveState();
+        }
+
+        // --- Rendering Engine ---
+        function renderAll() {
+            renderInicio();
+            renderCalendar();
+            renderMeals();
+            renderHabits();
+            renderStats();
+        }
+
+        function renderInicio() {
+            // Next activity
+            const pendingActs = appState.activities.filter(a => !a.completed).sort((a,b) => a.start.localeCompare(b.start));
+            if (pendingActs.length > 0) {
+                const next = pendingActs[0];
+                document.getElementById('next-act-title').innerText = next.title;
+                document.getElementById('next-act-time').innerText = `${next.day} • ${next.start} - ${next.end}`;
+                document.getElementById('next-act-category').innerText = capitalizeFirst(next.category);
+            } else {
+                document.getElementById('next-act-title').innerText = '¡Todo al día!';
+                document.getElementById('next-act-time').innerText = 'No hay actividades pendientes';
+                document.getElementById('next-act-category').innerText = 'Libre';
+            }
+
+            // Today list (let's assume Jueves or current day)
+            const todayActs = appState.activities.filter(a => a.day === 'Jueves');
+            document.getElementById('today-count-badge').innerText = `${todayActs.length} actividades`;
+            const listEl = document.getElementById('today-activities-list');
+            if (todayActs.length === 0) {
+                listEl.innerHTML = `<p class="text-xs text-slate-400 italic py-2">No hay actividades programadas para hoy.</p>`;
+            } else {
+                listEl.innerHTML = todayActs.map(act => `
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200/60 dark:border-slate-600/60">
+                        <div class="flex items-center space-x-3">
+                            <input type="checkbox" ${act.completed ? 'checked' : ''} onchange="toggleActivityComplete('${act.id}')" class="w-4 h-4 text-primary-600 rounded border-slate-300">
+                            <div>
+                                <h5 class="text-sm font-semibold ${act.completed ? 'line-through text-slate-400' : ''}">${act.title}</h5>
+                                <p class="text-[11px] text-slate-500">${act.start} - ${act.end} • <span class="uppercase font-medium">${act.category}</span></p>
+                            </div>
+                        </div>
+                        <button onclick="deleteActivity('${act.id}')" class="text-slate-400 hover:text-red-500 text-xs p-1.5"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `).join('');
+            }
+
+            // Water update
+            const wPercent = Math.min(100, Math.round((appState.water.consumedMl / appState.water.goalMl) * 100));
+            document.getElementById('water-stat-text').innerText = `${(appState.water.consumedMl/1000).toFixed(1)}L / ${(appState.water.goalMl/1000).toFixed(1)}L`;
+            document.getElementById('water-progress-bar').style.width = `${wPercent}%`;
+            document.getElementById('water-percent').innerText = `${wPercent}%`;
+
+            // Today meals preview
+            const todayMeal = appState.meals['Jueves'];
+            const mealsPrevEl = document.getElementById('today-meals-preview');
+            mealsPrevEl.innerHTML = `
+                <div class="flex justify-between items-center text-xs p-2 rounded-lg bg-slate-50 dark:bg-slate-700/40">
+                    <span class="font-medium">☕ Desayuno:</span> <span class="text-slate-600 dark:text-slate-300">${todayMeal.desayuno}</span>
+                </div>
+                <div class="flex justify-between items-center text-xs p-2 rounded-lg bg-slate-50 dark:bg-slate-700/40">
+                    <span class="font-medium">🍲 Almuerzo:</span> <span class="text-slate-600 dark:text-slate-300">${todayMeal.almuerzo}</span>
+                </div>
+                <div class="flex justify-between items-center text-xs p-2 rounded-lg bg-slate-50 dark:bg-slate-700/40">
+                    <span class="font-medium">🍎 Merienda:</span> <span class="text-slate-600 dark:text-slate-300">${todayMeal.merienda}</span>
+                </div>
+                <div class="flex justify-between items-center text-xs p-2 rounded-lg bg-slate-50 dark:bg-slate-700/40">
+                    <span class="font-medium">🌙 Cena:</span> <span class="text-slate-600 dark:text-slate-300">${todayMeal.cena}</span>
+                </div>
+            `;
+        }
+
+        // --- Calendar Rendering ---
+        let currentCalendarView = 'semana';
+        function setCalendarView(view) {
+            currentCalendarView = view;
+            if (view === 'semana') {
+                document.getElementById('btn-view-semana').className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-slate-600 shadow-sm transition-all";
+                document.getElementById('btn-view-dia').className = "px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 transition-all";
+            } else {
+                document.getElementById('btn-view-dia').className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-slate-600 shadow-sm transition-all";
+                document.getElementById('btn-view-semana').className = "px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 transition-all";
+            }
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const gridEl = document.getElementById('calendar-grid');
+            const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+            
+            const activeDays = currentCalendarView === 'semana' ? days : ['Jueves']; // Default day for 'dia' view
+
+            gridEl.className = currentCalendarView === 'semana' 
+                ? "grid grid-cols-1 md:grid-cols-7 divide-y md:divide-y-0 md:divide-x divide-slate-200 dark:divide-slate-700"
+                : "grid grid-cols-1 divide-y divide-slate-200 dark:divide-slate-700 max-w-2xl mx-auto";
+
+            gridEl.innerHTML = activeDays.map(day => {
+                const dayActs = appState.activities.filter(a => a.day === day).sort((a,b) => a.start.localeCompare(b.start));
+                return `
+                    <div class="p-4 flex flex-col min-h-[300px]">
+                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100 dark:border-slate-700">
+                            <h4 class="font-bold text-sm text-primary-600 dark:text-primary-400">${day}</h4>
+                            <span class="text-[10px] bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full text-slate-500">${dayActs.length} acts</span>
+                        </div>
+                        <div class="space-y-2.5 flex-1">
+                            ${dayActs.length === 0 ? `<p class="text-xs text-slate-400 italic py-4 text-center">Sin actividades</p>` : ''}
+                            ${dayActs.map(act => `
+                                <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/40 relative group shadow-sm hover:shadow transition-all">
+                                    <div class="flex justify-between items-start">
+                                        <span class="text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300">${act.category}</span>
+                                        <div class="flex items-center space-x-1">
+                                            <button onclick="toggleActivityComplete('${act.id}')" class="text-xs ${act.completed ? 'text-emerald-500' : 'text-slate-300'} hover:text-emerald-600"><i class="fa-solid fa-circle-check"></i></button>
+                                            <button onclick="deleteActivity('${act.id}')" class="text-xs text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
+                                        </div>
+                                    </div>
+                                    <h5 class="text-xs font-bold mt-2 ${act.completed ? 'line-through text-slate-400' : ''}">${act.title}</h5>
+                                    <p class="text-[11px] text-slate-500 mt-0.5"><i class="fa-regular fa-clock mr-1"></i>${act.start} - ${act.end}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <button onclick="openActivityModalForDay('${day}')" class="mt-3 w-full py-2 border border-dashed border-slate-300 dark:border-slate-600 text-slate-500 hover:text-primary-600 hover:border-primary-500 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-plus text-[10px]"></i> Agregar
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // --- Meals Rendering ---
+        function renderMeals() {
+            const container = document.getElementById('weekly-menu-container');
+            const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
+            container.innerHTML = days.map(day => {
+                const meal = appState.meals[day];
+                return `
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div class="w-full md:w-32">
+                            <h4 class="font-bold text-sm text-primary-600 dark:text-primary-400">${day}</h4>
+                            <span class="text-[10px] text-slate-400">Menú equilibrado</span>
+                        </div>
+                        <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full text-xs">
+                            <div class="bg-slate-50 dark:bg-slate-700/40 p-2.5 rounded-xl border border-slate-200/50 dark:border-slate-600/50">
+                                <span class="font-semibold text-slate-400 block text-[10px]">DESAYUNO</span>
+                                <span class="font-medium mt-0.5 block">${meal.desayuno}</span>
+                                ${appState.showCalories ? '<span class="text-[10px] text-amber-500 mt-1 block">~320 kcal (aprox)</span>' : ''}
+                            </div>
+                            <div class="bg-slate-50 dark:bg-slate-700/40 p-2.5 rounded-xl border border-slate-200/50 dark:border-slate-600/50">
+                                <span class="font-semibold text-slate-400 block text-[10px]">ALMUERZO</span>
+                                <span class="font-medium mt-0.5 block">${meal.almuerzo}</span>
+                                ${appState.showCalories ? '<span class="text-[10px] text-amber-500 mt-1 block">~550 kcal (aprox)</span>' : ''}
+                            </div>
+                            <div class="bg-slate-50 dark:bg-slate-700/40 p-2.5 rounded-xl border border-slate-200/50 dark:border-slate-600/50">
+                                <span class="font-semibold text-slate-400 block text-[10px]">MERIENDA</span>
+                                <span class="font-medium mt-0.5 block">${meal.merienda}</span>
+                                ${appState.showCalories ? '<span class="text-[10px] text-amber-500 mt-1 block">~210 kcal (aprox)</span>' : ''}
+                            </div>
+                            <div class="bg-slate-50 dark:bg-slate-700/40 p-2.5 rounded-xl border border-slate-200/50 dark:border-slate-600/50">
+                                <span class="font-semibold text-slate-400 block text-[10px]">CENA</span>
+                                <span class="font-medium mt-0.5 block">${meal.cena}</span>
+                                ${appState.showCalories ? '<span class="text-[10px] text-amber-500 mt-1 block">~480 kcal (aprox)</span>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleCaloriesDisplay() {
+            appState.showCalories = document.getElementById('toggle-calories-view').checked;
+            renderMeals();
+        }
+
+        function generateShoppingList() {
+            const listEl = document.getElementById('shopping-list-container');
+            const sampleIngredients = [
+                { category: 'Verduras y Frutas', items: ['Palta (3)', 'Tomates (1kg)', 'Espinaca (2 paquetes)', 'Bananas (6)', 'Limones (4)'] },
+                { category: 'Carnes y Pescados', items: ['Pechuga de pollo (1kg)', 'Filet de merluza (500g)', 'Salmón (2 porciones)'] },
+                { category: 'Almacén y Granos', items: ['Quinoa (500g)', 'Arroz integral (1kg)', 'Avena tradicional (1 bolsa)', 'Pan integral (2 moldes)'] },
+                { category: 'Lácteos y Huevos', items: ['Huevos (docena)', 'Yogurt natural (2)', 'Queso crema descremado'] }
+            ];
+
+            listEl.innerHTML = sampleIngredients.map(group => `
+                <div class="space-y-1 mb-3">
+                    <h5 class="text-xs font-bold text-primary-600 dark:text-primary-400">${group.category}</h5>
+                    <ul class="list-disc list-inside text-xs text-slate-600 dark:text-slate-300 space-y-0.5 pl-1">
+                        ${group.items.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                </div>
+            `).join('');
+            showToast('¡Lista de compras generada con éxito!', 'success');
+        }
+
+        function clearShoppingList() {
+            document.getElementById('shopping-list-container').innerHTML = `<p class="text-xs text-slate-400 italic">Lista vacía.</p>`;
+            showToast('Lista limpiada.', 'info');
+        }
+
+        // --- Habits & Water ---
+        function addWater(amount) {
+            appState.water.consumedMl += amount;
+            appState.water.history.push(amount);
+            saveState();
+            renderAll();
+            showToast(`+${amount} ml de agua agregados`, 'success');
+        }
+
+        function undoWater() {
+            if (appState.water.history.length > 0) {
+                const last = appState.water.history.pop();
+                appState.water.consumedMl = Math.max(0, appState.water.consumedMl - last);
+                saveState();
+                renderAll();
+                showToast(`Se deshicieron ${last} ml`, 'info');
+            } else {
+                showToast('No hay registros para deshacer hoy', 'info');
+            }
+        }
+
+        function renderHabits() {
+            const listEl = document.getElementById('habits-list-container');
+            listEl.innerHTML = appState.habits.map(h => `
+                <div class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200/60 dark:border-slate-600/60">
+                    <div class="flex items-center space-x-3">
+                        <input type="checkbox" ${h.completedToday ? 'checked' : ''} onchange="toggleHabit('${h.id}')" class="w-4 h-4 text-primary-600 rounded border-slate-300">
+                        <span class="text-sm font-medium ${h.completedToday ? 'line-through text-slate-400' : ''}">${h.title}</span>
+                    </div>
+                    <span class="text-[10px] px-2 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 font-semibold">Diario</span>
+                </div>
+            `).join('');
+
+            // Also update habit water total in the habit tab
+            document.getElementById('habit-water-total').innerText = `${appState.water.consumedMl.toLocaleString()} ml`;
+            document.getElementById('habit-water-goal').innerText = `${appState.water.goalMl.toLocaleString()} ml`;
+        }
+
+        function toggleHabit(id) {
+            const h = appState.habits.find(x => x.id === id);
+            if (h) {
+                h.completedToday = !h.completedToday;
+                saveState();
+                renderHabits();
+            }
+        }
+
+        // --- Stats Rendering ---
+        function renderStats() {
+            const barsEl = document.getElementById('time-stats-bars');
+            const categories = [
+                { name: 'Trabajo / Estudio', hours: 28, color: 'bg-primary-500' },
+                { name: 'Entrenamiento', hours: 5, color: 'bg-emerald-500' },
+                { name: 'Descanso / Sueño', hours: 56, color: 'bg-indigo-500' },
+                { name: 'Ocio y Tiempo libre', hours: 14, color: 'bg-accent-500' }
+            ];
+
+            barsEl.innerHTML = categories.map(cat => `
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs">
+                        <span class="font-medium">${cat.name}</span>
+                        <span class="font-bold">${cat.hours} hrs</span>
+                    </div>
+                    <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden">
+                        <div class="${cat.color} h-full rounded-full" style="width: ${(cat.hours / 60) * 100}%"></div>
+                    </div>
+                </div>
+            `).join('');
+
+            const completedCount = appState.activities.filter(a => a.completed).length;
+            document.getElementById('stat-completed-count').innerText = completedCount;
+        }
+
+        // --- Activity Modal & Overlap Detection ---
+        let selectedDayForNew = 'Jueves';
+        function openActivityModal() {
+            document.getElementById('activity-modal').classList.remove('hidden');
+        }
+        function openActivityModalForDay(day) {
+            selectedDayForNew = day;
+            document.getElementById('act-day').value = day;
+            openActivityModal();
+        }
+        function closeActivityModal() {
+            document.getElementById('activity-modal').classList.add('hidden');
+        }
+
+        function saveActivity() {
+            const title = document.getElementById('act-title').value.trim();
+            const day = document.getElementById('act-day').value;
+            const category = document.getElementById('act-category').value;
+            const start = document.getElementById('act-start').value;
+            const end = document.getElementById('act-end').value;
+            const priority = document.getElementById('act-priority').value;
+
+            if (!title) {
+                showToast('Por favor ingresa un título para la actividad', 'error');
+                return;
+            }
+
+            // Check overlap
+            const existing = appState.activities.filter(a => a.day === day);
+            let hasOverlap = false;
+            for (let act of existing) {
+                if (!(end <= act.start || start >= act.end)) {
+                    hasOverlap = true;
+                    break;
+                }
+            }
+
+            if (hasOverlap) {
+                closeActivityModal();
+                showProposalModal({ title, day, category, start, end, priority });
+                return;
+            }
+
+            const newAct = { id: Date.now().toString(), title, day, category, start, end, priority, completed: false };
+            appState.activities.push(newAct);
+            saveState();
+            renderAll();
+            closeActivityModal();
+            showToast('Actividad agregada con éxito', 'success');
+            document.getElementById('act-title').value = '';
+        }
+
+        let pendingProposalActivity = null;
+        function showProposalModal(act) {
+            pendingProposalActivity = act;
+            const modal = document.getElementById('proposal-modal');
+            const content = document.getElementById('proposal-content');
+            content.innerHTML = `
+                <div class="bg-amber-50 dark:bg-amber-950/30 p-3 rounded-xl border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-300">
+                    La actividad <b>"${act.title}"</b> (${act.start} - ${act.end} el ${act.day}) se superpone con otro compromiso.
+                </div>
+                <div class="space-y-3 pt-2">
+                    <p class="text-xs font-semibold">Propuesta automática del asistente:</p>
+                    <div class="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-600 text-xs space-y-1">
+                        <p><b>Sugerencia:</b> Mover horario de inicio 30 minutos después.</p>
+                        <p><b>Nuevo horario sugerido:</b> <span class="text-primary-600 font-bold">18:30 - 20:00</span></p>
+                    </div>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+        }
+
+        function closeProposalModal() {
+            document.getElementById('proposal-modal').classList.add('hidden');
+            pendingProposalActivity = null;
+        }
+
+        function applyProposal() {
+            if (pendingProposalActivity) {
+                pendingProposalActivity.start = '18:30';
+                pendingProposalActivity.end = '20:00';
+                pendingProposalActivity.id = Date.now().toString();
+                pendingProposalActivity.completed = false;
+                appState.activities.push(pendingProposalActivity);
+                saveState();
+                renderAll();
+                closeProposalModal();
+                showToast('Propuesta aplicada con éxito', 'success');
+            }
+        }
+
+        function toggleActivityComplete(id) {
+            const act = appState.activities.find(x => x.id === id);
+            if (act) {
+                act.completed = !act.completed;
+                saveState();
+                renderAll();
+            }
+        }
+
+        function deleteActivity(id) {
+            appState.activities = appState.activities.filter(x => x.id !== id);
+            saveState();
+            renderAll();
+            showToast('Actividad eliminada', 'info');
+        }
+
+        // --- Onboarding Logic ---
+        let currentOnbStep = 1;
+        function nextOnboardingStep() {
+            if (currentOnbStep < 3) {
+                document.querySelector(`[data-step="${currentOnbStep}"]`).classList.add('hidden');
+                currentOnbStep++;
+                document.querySelector(`[data-step="${currentOnbStep}"]`).classList.remove('hidden');
+                document.getElementById('onb-prev-btn').classList.remove('hidden');
+                document.getElementById('onb-step-indicator').innerText = `Paso ${currentOnbStep} de 3`;
+                if (currentOnbStep === 3) {
+                    document.getElementById('onb-next-btn').innerText = 'Comenzar';
+                }
+            } else {
+                finishOnboarding();
+            }
+        }
+
+        function prevOnboardingStep() {
+            if (currentOnbStep > 1) {
+                document.querySelector(`[data-step="${currentOnbStep}"]`).classList.add('hidden');
+                currentOnbStep--;
+                document.querySelector(`[data-step="${currentOnbStep}"]`).classList.remove('hidden');
+                document.getElementById('onb-step-indicator').innerText = `Paso ${currentOnbStep} de 3`;
+                if (currentOnbStep === 1) {
+                    document.getElementById('onb-prev-btn').classList.add('hidden');
+                }
+                document.getElementById('onb-next-btn').innerText = 'Siguiente';
+            }
+        }
+
+        function skipOnboarding() {
+            finishOnboarding();
+        }
+
+        function finishOnboarding() {
+            appState.userProfile.sleepTime = document.getElementById('onb-sleep-time').value;
+            appState.userProfile.wakeTime = document.getElementById('onb-wake-time').value;
+            appState.userProfile.fixedTitle = document.getElementById('onb-fixed-title').value || 'Trabajo Principal';
+            appState.userProfile.fixedCategory = document.getElementById('onb-fixed-category').value;
+            appState.userProfile.allergies = document.getElementById('onb-allergies').value || 'Ninguna';
+            appState.userProfile.isMinor = document.getElementById('onb-minor').checked;
+
+            appState.onboardingCompleted = true;
+            saveState();
+            document.getElementById('onboarding-modal').classList.add('hidden');
+            showToast('¡Configuración guardada con éxito!', 'success');
+        }
+
+        // --- Settings / Toast ---
+        function requestNotificationPermission() {
+            if ('Notification' in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        showToast('¡Notificaciones activadas correctamente!', 'success');
+                    } else {
+                        showToast('Permiso de notificaciones denegado o limitado por el navegador.', 'info');
+                    }
+                });
+            } else {
+                showToast('Tu navegador no soporta notificaciones nativas.', 'info');
+            }
+        }
+
+        function exportUserData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", "mi_semana_datos.json");
+            dlAnchorElem.click();
+            showToast('Datos exportados correctamente', 'success');
+        }
+
+        function resetAllData() {
+            if (confirm('¿Estás seguro de que deseas eliminar todos tus datos? Esta acción no se puede deshacer.')) {
+                localStorage.removeItem('mi_semana_state_v2');
+                location.reload();
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgCol = type === 'success' ? 'bg-emerald-600 text-white' : type === 'error' ? 'bg-red-600 text-white' : 'bg-slate-800 text-white';
+            toast.className = `${bgCol} px-4 py-3 rounded-xl shadow-lg text-xs font-medium pointer-events-auto transform translate-y-2 opacity-0 transition-all duration-300 flex items-center space-x-2`;
+            toast.innerHTML = `<span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
